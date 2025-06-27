@@ -9,29 +9,31 @@ on:
       - develop_v1
 
 jobs:
-  check-naming-conventions:
-    name: 🔤 Validate lowercase filenames and folders
+  validate-naming-conventions:
+    name: 🔤 Validate lowercase filenames and folders.
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout Code
+      - name: 📥 Checkout repository
         uses: actions/checkout@v3
 
-      - name: 🔍 Check for Capital Letters (with Allowlist)
+      - name: 🔍 Detect capitalized file or folder names
         run: |
-          echo "🔍 Scanning for capitalized file/folder names (with allowlist)..."
-          violations=$(git ls-tree -r HEAD --name-only | grep -E '^([^/]+/)*[A-Z]' | grep -vE '^(README\.md|\.github/)')
+          echo "🔍 Starting scan for files or folders with capitalized names..."
+          
+          # List all tracked files and detect names starting with uppercase (excluding README.md)
+          capitalized_entries=$(git ls-tree -r HEAD --name-only | grep -E '^([^/]*[A-Z][^/]*)' | grep -vE '^README\.md$')
 
-          if [ -n "$violations" ]; then
-            echo "❌ Error: The following files or folders contain capital letters:"
-            echo "$violations"
+          if [ -n "$capitalized_entries" ]; then
+            echo "::error::❌ Capitalized file/folder names detected:"
+            echo "$capitalized_entries"
             echo ""
-            echo "🔒 Please use lowercase naming for all files and directories (except README.md and .github/)"
+            echo "🚫 Please rename all files and folders to lowercase. Only 'README.md' is allowed with capital letters."
             exit 1
           else
             echo "✅ All file and folder names are lowercase. Pre-release check passed."
           fi
 
-      - name: ✅ Success
+      - name: ✅ Success confirmation
         if: success()
-        run: echo "🎉 All pre-release checks passed successfully!"
+        run: echo "🎉 All pre-release naming checks passed successfully!"
