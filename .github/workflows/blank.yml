@@ -1,0 +1,34 @@
+name: Pre-release Validation
+
+on:
+  push:
+    branches: [ develop_v1 ]
+  pull_request:
+    branches: [ develop_v1 ]
+
+jobs:
+  pre-release-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v3
+
+    - name: 🚫 Check for capitalized folders or files
+      run: |
+        echo "Running file/folder naming validation..."
+
+        # List files and folders with capital letters
+        capital_files=$(git ls-files | grep -E '/[A-Z]' || true)
+        capital_root_files=$(git ls-files | grep -E '^[A-Z]' || true)
+
+        if [ ! -z "$capital_files" ] || [ ! -z "$capital_root_files" ]; then
+          echo "❌ ERROR: The following files or folders start with a capital letter:"
+          echo "$capital_files"
+          echo "$capital_root_files"
+          echo "Please rename them to follow lowercase naming conventions."
+          exit 1
+        fi
+
+    - name: ✅ Success
+      run: echo "All pre-release checks passed!"
