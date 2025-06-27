@@ -1,34 +1,37 @@
-name: Pre-release Validation
+name: 🔍 Pre-Release Checks
 
 on:
   push:
-    branches: [ develop_v1 ]
+    branches:
+      - develop_v1
   pull_request:
-    branches: [ develop_v1 ]
+    branches:
+      - develop_v1
 
 jobs:
-  pre-release-checks:
+  check-naming-conventions:
+    name: 🔤 Validate lowercase filenames and folders
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 Checkout repository
-      uses: actions/checkout@v3
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v3
 
-    - name: 🚫 Check for capitalized folders or files
-      run: |        
-        echo "Running file/folder naming validation..."
+      - name: 🔍 Check for Capital Letters (with Allowlist)
+        run: |
+          echo "🔍 Scanning for capitalized file/folder names (with allowlist)..."
+          violations=$(git ls-tree -r HEAD --name-only | grep -E '^([^/]+/)*[A-Z]' | grep -vE '^(README\.md|\.github/)')
 
-        # Get all tracked files with capital letters (excluding README.md)
-        capital_files=$(git ls-files | grep -E '/[A-Z]' | grep -v 'README.md' || true)
-        capital_root_files=$(git ls-files | grep -E '^[A-Z]' | grep -v '^README.md$' || true)
-        
-        if [ ! -z "$capital_files" ] || [ ! -z "$capital_root_files" ]; then
-          echo "❌ ERROR: The following files or folders start with a capital letter (excluding README.md):"
-          echo "$capital_files"
-          echo "$capital_root_files"
-          echo "Please rename them to follow lowercase naming conventions."
-          exit 1
-        fi
+          if [ -n "$violations" ]; then
+            echo "❌ Error: The following files or folders contain capital letters:"
+            echo "$violations"
+            echo ""
+            echo "🔒 Please use lowercase naming for all files and directories (except README.md and .github/)"
+            exit 1
+          else
+            echo "✅ All file and folder names are lowercase. Pre-release check passed."
+          fi
 
-    - name: ✅ Success
-      run: echo "All pre-release checks passed!"
+      - name: ✅ Success
+        if: success()
+        run: echo "🎉 All pre-release checks passed successfully!"
